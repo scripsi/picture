@@ -35,3 +35,40 @@ network={
 - Create an empty file called `ssh` - eg `touch /media/$USER/boot/ssh`
 
 Eject the microSD card from the PC, insert it into the Raspberry Pi and connect a power supply. After it has booted up, search for it's IP address on the network and SSH to it using the username `pi` and password `raspberry`.
+
+Test that the network is all up and running by doing:
+
+```shell
+sudo apt update
+sudo apt upgrade
+```
+
+and then configure it:
+
+```shell
+sudo raspi-config
+```
+
+```conf
+1 System Options
+  S3 Password
+  S4 Hostname
+  S8 Power LED
+
+3 Interfaces
+  P1 Camera
+  P5 I2C
+  P6 Serial Port
+
+6 Advanced Options
+  A1 Expand Filesystem
+```
+
+Exit and reboot.
+
+Install prerequisites:
+
+```shell
+sudo apt install git python3-pip python3-picamera sendemail
+sudo pip3 install pimoroni-bme280 smbus
+```
