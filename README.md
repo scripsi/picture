@@ -1,6 +1,6 @@
 # picture
 
-**P**i **C**amera **T**aking **U**tility **Re**adings
+**Pi** **C**amera **T**aking **U**tility **Re**adings
 
 ## Introduction
 
@@ -69,6 +69,21 @@ Exit and reboot.
 Install prerequisites:
 
 ```shell
-sudo apt install git python3-pip python3-picamera sendemail
-sudo pip3 install pimoroni-bme280 smbus
+sudo apt install git python3-pip python3-picamera python3-gpiozero python3-opencv tesseract-ocr sendemail
+sudo pip3 install pimoroni-bme280 smbus pytesseract
 ```
+
+## Enable read-only overlay filesystem
+
+```shell
+sudo raspi-config
+```
+
+```conf
+4 Performance Options
+  P3 Overlay Filesystem
+    Enable overlay filesystem - <Yes>
+    Write protect boot partition - <No>
+```
+
+Exit and reboot.
