@@ -32,11 +32,11 @@ led1.off()
 led2.off()
 
 # process image
-img=cv.imread("image.jpg")
+img=cv.imread("/home/pi/picture/image.jpg")
 
 # Image slice coordinates are [start_y:end_y, start_x:end_x]
 date_img = img[20:50, 1151:1441]
 meter_a_img = img[730:780,525:815]
 meter_b_img = img[1160:1200,1455:1745]
 all_meter_img = cv.vconcat([date_img,meter_a_img,meter_b_img])
-cv.imwrite("meter.jpg",all_meter_img)
+cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
