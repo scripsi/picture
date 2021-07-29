@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from gpiozero import LED
 import picamera
 from time import sleep
