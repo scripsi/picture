@@ -69,8 +69,7 @@ Exit and reboot.
 Install prerequisites:
 
 ```shell
-sudo apt install git python3-pip python3-picamera python3-gpiozero python3-opencv tesseract-ocr sendemail
-sudo pip3 install pimoroni-bme280 smbus pytesseract
+sudo apt install git python3-picamera2 python3-bme280 python3-smbus python3-gpiozero python3-opencv sendemail
 ```
 
 ## Enable read-only overlay filesystem

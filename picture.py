@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from gpiozero import LED
-import picamera
+from picamera2 import Picamera2
+from libcamera import Transform
 from time import sleep
 from fractions import Fraction
 import datetime
@@ -14,16 +15,20 @@ led2 = LED(24)
 # Capture image
 led1.on()
 led2.on()
-camera = picamera.PiCamera(
-    resolution=(2592, 1944),
-    framerate=Fraction(1, 6),
-    sensor_mode=3)
-camera.shutter_speed = 4000000
-camera.iso = 800
-camera.rotation = 180
-camera.exposure_mode = 'off'
-camera.annotate_background = picamera.Color('black')
-camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+camera=Picamera2()
+camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True))
+camera.configure(camera_config)
+camera.start() 
+# camera=picamera2.Picamera2(
+#    resolution=(2592, 1944),
+#    framerate=Fraction(1, 6),
+#    sensor_mode=3)
+#camera.shutter_speed = 4000000
+#camera.iso = 800
+#camera.rotation = 180
+#camera.exposure_mode = 'off'
+#camera.annotate_background = picamera2.Color('black')
+#camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 sleep(1)
 camera.capture('/home/pi/picture/image.jpg')
 sleep(1)
