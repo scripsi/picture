@@ -1,47 +1,84 @@
 #!/usr/bin/env python
 
 from gpiozero import LED
+from smbus import SMBus
+from bme280 import BME280
 from picamera2 import Picamera2
 from libcamera import Transform
 from time import sleep
-from fractions import Fraction
 import datetime
 import cv2 as cv
 import numpy as np
+import smtplib
+import ssl
+import mimetypes
+from email.message import EmailMessage
+from configparser import ConfigParser
+
+ini = ConfigParser()
+ini.read("/home/pi/picture.ini")
 
 led1 = LED(23)
 led2 = LED(24)
+bus = SMBus(1)
+bme280 = BME280(i2c_dev=bus)
+bme280.setup(mode="forced")
+print(bme280.get_temperature())
+print(bme280.get_humidity())
 
 # Capture image
 led1.on()
 led2.on()
 camera=Picamera2()
-camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True))
+camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
+                                                controls={"ExposureTime": 4000000})
 camera.configure(camera_config)
 camera.start() 
-# camera=picamera2.Picamera2(
-#    resolution=(2592, 1944),
-#    framerate=Fraction(1, 6),
-#    sensor_mode=3)
-#camera.shutter_speed = 4000000
-#camera.iso = 800
-#camera.rotation = 180
-#camera.exposure_mode = 'off'
-#camera.annotate_background = picamera2.Color('black')
-#camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 sleep(1)
-camera.capture('/home/pi/picture/image.jpg')
+img=camera.capture_array()
 sleep(1)
 camera.close()
 led1.off()
 led2.off()
 
 # process image
-img=cv.imread("/home/pi/picture/image.jpg")
 
 # Image slice coordinates are [start_y:end_y, start_x:end_x]
-date_img = img[20:50, 1151:1441]
-meter_a_img = img[730:780,525:815]
-meter_b_img = img[1160:1200,1455:1745]
-all_meter_img = cv.vconcat([date_img,meter_a_img,meter_b_img])
-cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
+meter_a_img = img[735:785,580:780]
+meter_b_img = img[1165:1225,1490:1690]
+
+# create datestamp and filename
+date_img=np.zeros((20,200,3),np.uint8)
+date_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+img_file_name=datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-meter.jpg"
+cv.putText(date_img,date_text,(5,15),cv.FONT_HERSHEY_SIMPLEX,0.5,(255,255,255),1,2)
+
+# create weather info
+temperature = bme280.get_temperature()
+humidity = bme280.get_humidity()
+weather_text='Temperature: {:.1f}C\nHumidity: {:.1f}%'.format(temperature,humidity)
+all_meter_img = cv.vconcat([meter_a_img,meter_b_img,date_img])
+#cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
+
+# convert image to bytes
+ret,jpg=cv.imencode(".jpg",all_meter_img)
+binary_data = jpg.tobytes()
+
+# create email message
+msg = EmailMessage()
+msg['Subject'] = 'South Cottage Electricity Meter Readings'
+msg['From'] = ini['default']['fromaddress']
+msg['To'] = ini['default']['toaddress']
+# Set text content
+msg.set_content("See attached picture:\n\n  Heating Rate Meter\n  Standard Rate Meter\n  Time of Reading\n\n" + weather_text + "\n")
+# attach picture
+msg.add_attachment(binary_data, maintype='image', subtype='jpeg', filename=img_file_name)
+
+# Send email
+context = ssl.create_default_context()
+
+with smtplib.SMTP_SSL(ini['default']['server'], 465, context=context) as server:
+    server.login(ini['default']['user'], ini['default']['password'])
+    server.send_message(msg)
+    

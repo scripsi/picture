@@ -66,11 +66,26 @@ sudo raspi-config
 
 Exit and reboot.
 
+## Software Setup
+
 Install prerequisites:
 
 ```shell
-sudo apt install git python3-picamera2 python3-bme280 python3-smbus python3-gpiozero python3-opencv sendemail
+sudo apt install git micro python3-venv python3-picamera2 python3-smbus python3-gpiozero python3-opencv tesseract-ocr libtesseract-dev sendemail
 ```
+
+Install the picture repository:
+
+```shell
+git clone https://github.com/scripsi/picture
+cd picture
+mkdir .venv
+python -m venv --system-site-packages .venv
+source .venv/bin/activate
+pip install pimoroni-bme280 pytesseract
+```
+
+
 
 ## Enable read-only overlay filesystem
 
