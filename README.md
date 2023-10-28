@@ -71,7 +71,7 @@ Exit and reboot.
 Install prerequisites:
 
 ```shell
-sudo apt install git micro python3-venv python3-picamera2 python3-smbus python3-gpiozero python3-opencv tesseract-ocr libtesseract-dev sendemail
+sudo apt install git micro python3-venv python3-picamera2 python3-smbus python3-gpiozero python3-opencv
 ```
 
 Install the picture repository:
@@ -82,7 +82,8 @@ cd picture
 mkdir .venv
 python -m venv --system-site-packages .venv
 source .venv/bin/activate
-pip install pimoroni-bme280 pytesseract
+pip install -r requirements.txt
+pip freeze --local > requirements.txt
 ```
 
 
