@@ -7,6 +7,7 @@ from picamera2 import Picamera2
 from libcamera import Transform
 from time import sleep
 import datetime
+from uptime import boottime
 import cv2 as cv
 import numpy as np
 import smtplib
@@ -43,16 +44,21 @@ led1.off()
 led2.off()
 
 # process image
+#cv.imwrite("/home/pi/picture/image.jpg",img)
 
 # Image slice coordinates are [start_y:end_y, start_x:end_x]
-meter_a_img = img[735:785,580:780]
-meter_b_img = img[1165:1225,1490:1690]
+meter_a_img = img[740:790,550:750]
+meter_b_img = img[1170:1230,1460:1660]
 
-# create datestamp and filename
+# create datestamps and filename
 date_img=np.zeros((20,200,3),np.uint8)
 date_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+email_date_text = datetime.datetime.now().strftime('%A, %d %B %Y at %H:%M')
 img_file_name=datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-meter.jpg"
 cv.putText(date_img,date_text,(5,15),cv.FONT_HERSHEY_SIMPLEX,0.5,(255,255,255),1,2)
+
+# create uptime info
+boot_text = 'Running since ' + boottime().strftime('%H:%M:%S on %A, %d %B %Y')
 
 # create weather info
 temperature = bme280.get_temperature()
@@ -71,7 +77,12 @@ msg['Subject'] = 'South Cottage Electricity Meter Readings'
 msg['From'] = ini['default']['fromaddress']
 msg['To'] = ini['default']['toaddress']
 # Set text content
-msg.set_content("See attached picture:\n\n  Heating Rate Meter\n  Standard Rate Meter\n  Time of Reading\n\n" + weather_text + "\n")
+msg.set_content("South Cottage meter readings taken on "
+                + email_date_text
+                + "\n\nSee attached picture:\n\n  Heating Rate Meter\n  Standard Rate Meter (ignore rightmost digit)\n  Time of Reading\n\n"
+                + weather_text + "\n"
+                + boot_text + "\n")
+
 # attach picture
 msg.add_attachment(binary_data, maintype='image', subtype='jpeg', filename=img_file_name)
 
