@@ -86,7 +86,23 @@ pip install -r requirements.txt
 pip freeze --local > requirements.txt
 ```
 
+## Setup crontab
 
+Edit crontab:
+
+```shell
+crontab -e
+```
+
+Add the following lines:
+
+```
+# m h  dom mon dow   command
+0 2 * * * /home/pi/picture/.venv/bin/python /home/pi/picture/picture.py
+0 3 * * 5 [ $(date +"\%m") -ne $(date -d 7days +"\%m") ] && /home/pi/picture/.venv/bin/python /home/pi/picture/fullpicture.py
+```
+
+The first line runs `picture.py` every morning at 2am. The second line runs `fullpicture.py` on the last Friday of every month at 3am.
 
 ## Enable read-only overlay filesystem
 
