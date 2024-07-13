@@ -87,9 +87,10 @@ msg.set_content("South Cottage meter readings taken on "
 msg.add_attachment(binary_data, maintype='image', subtype='jpeg', filename=img_file_name)
 
 # Send email
-context = ssl.create_default_context()
+# context = ssl.create_default_context()
 
-with smtplib.SMTP_SSL(ini['default']['server'], 465, context=context) as server:
+# with smtplib.SMTP_SSL(ini['default']['server'], 465, context=context) as server:
+with smtplib.SMTP(ini['default']['server']) as server:
     server.login(ini['default']['user'], ini['default']['password'])
     server.send_message(msg)
     
