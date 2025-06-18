@@ -6,6 +6,7 @@ from bme280 import BME280
 from picamera2 import Picamera2
 from libcamera import Transform
 from time import sleep
+from time import time as time_now
 import datetime
 from uptime import boottime
 import cv2 as cv
@@ -37,18 +38,29 @@ camera.configure(camera_config)
 camera.start() 
 
 sleep(1)
-img=camera.capture_array()
-sleep(1)
+
+meter_img = []
+
+capture_interval = 7
+
+for i in range(4):
+  begin_capture = time_now()
+#  print("Taking picture at: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+  img = camera.capture_array()
+  meter_img.append(img[850:920,783:983])
+  while time_now() < (begin_capture + capture_interval):
+    sleep(1)
+
 camera.close()
 led1.off()
 led2.off()
 
 # process image
-#cv.imwrite("/home/pi/picture/image.jpg",img)
+# cv.imwrite("/home/pi/picture/image.jpg",img)
 
 # Image slice coordinates are [start_y:end_y, start_x:end_x]
-meter_a_img = img[740:790,550:750]
-meter_b_img = img[1170:1230,1460:1660]
+#meter_a_img = img[828:942,783:983]
+#meter_b_img = img[1170:1230,1460:1660]
 
 # create datestamps and filename
 date_img=np.zeros((20,200,3),np.uint8)
@@ -64,7 +76,7 @@ boot_text = 'Running since ' + boottime().strftime('%H:%M:%S on %A, %d %B %Y')
 temperature = bme280.get_temperature()
 humidity = bme280.get_humidity()
 weather_text='Temperature: {:.1f}C\nHumidity: {:.1f}%'.format(temperature,humidity)
-all_meter_img = cv.vconcat([meter_a_img,meter_b_img,date_img])
+all_meter_img = cv.vconcat([meter_img[0],meter_img[1],meter_img[2],meter_img[3],date_img])
 #cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
 
 # convert image to bytes
@@ -73,13 +85,13 @@ binary_data = jpg.tobytes()
 
 # create email message
 msg = EmailMessage()
-msg['Subject'] = 'South Cottage Electricity Meter Readings'
+msg['Subject'] = 'South Cottage Electricity Meter Reading'
 msg['From'] = ini['default']['fromaddress']
 msg['To'] = ini['default']['toaddress']
 # Set text content
-msg.set_content("South Cottage meter readings taken on "
+msg.set_content("South Cottage meter reading taken on "
                 + email_date_text
-                + "\n\nSee attached picture:\n\n  Heating Rate Meter\n  Standard Rate Meter (ignore rightmost digit)\n  Time of Reading\n\n"
+                + "\n\nSee attached picture.\n\n"
                 + weather_text + "\n"
                 + boot_text + "\n")
 
