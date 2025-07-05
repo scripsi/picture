@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from gpiozero import LED
-from smbus import SMBus
+from smbus2 import SMBus
 from bme280 import BME280
 from picamera2 import Picamera2
 from libcamera import Transform
@@ -33,7 +33,7 @@ led1.on()
 led2.on()
 camera=Picamera2()
 camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
-                                                controls={"ExposureTime": 4000000})
+                                                controls={"ExposureTime": 1000000, "AnalogueGain":4.0})
 camera.configure(camera_config)
 camera.start() 
 
@@ -47,7 +47,7 @@ for i in range(4):
   begin_capture = time_now()
 #  print("Taking picture at: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
   img = camera.capture_array()
-  meter_img.append(img[850:920,783:983])
+  meter_img.append(img[1000:1070,1200:1400])
   while time_now() < (begin_capture + capture_interval):
     sleep(1)
 
@@ -91,7 +91,7 @@ msg['To'] = ini['default']['toaddress']
 # Set text content
 msg.set_content("South Cottage meter reading taken on "
                 + email_date_text
-                + "\n\nSee attached picture.\n\n"
+                + "\n\nUse kWh reading from attached picture.\n\n"
                 + weather_text + "\n"
                 + boot_text + "\n")
 
