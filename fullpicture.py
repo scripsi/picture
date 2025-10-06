@@ -24,7 +24,7 @@ led1.on()
 led2.on()
 camera=Picamera2()
 camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
-                                                controls={"ExposureTime": 4000000})
+                                                controls={"ExposureTime": 1000000,"AnalogueGain": 2.0})
 camera.configure(camera_config)
 camera.start() 
 
