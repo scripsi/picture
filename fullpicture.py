@@ -29,11 +29,14 @@ camera.configure(camera_config)
 camera.start() 
 
 sleep(1)
-img=camera.capture_array()
+full_img=camera.capture_array()
 sleep(1)
 camera.close()
 led1.off()
 led2.off()
+
+# Image slice coordinates are [start_y:end_y, start_x:end_x]
+img = full_img[630:1430, 1000:1550]
 
 # process image
 #cv.imwrite("/home/pi/picture/image.jpg",img)
