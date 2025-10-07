@@ -36,7 +36,7 @@ led1.off()
 led2.off()
 
 # Image slice coordinates are [start_y:end_y, start_x:end_x]
-img = full_img[630:1430, 1000:1550]
+img = full_img[630:1430, 1000:1570]
 
 # process image
 #cv.imwrite("/home/pi/picture/image.jpg",img)
@@ -45,6 +45,7 @@ email_date_text = datetime.datetime.now().strftime('%A, %d %B %Y at %H:%M')
 img_file_name=datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-allmeters.jpg"
 
 # convert image to bytes
+cv.IMWRITE_JPEG_QUALITY = 80
 ret,jpg=cv.imencode(".jpg",img)
 binary_data = jpg.tobytes()
 
