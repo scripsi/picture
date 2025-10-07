@@ -17,37 +17,58 @@ import mimetypes
 from email.message import EmailMessage
 from configparser import ConfigParser
 
+# *** Initialisation ***
+
+# read ini file
 ini = ConfigParser()
 ini.read("/home/pi/picture.ini")
+
+billdate = ini['default']['billdate']
+# If billing date, take pictures of whole meter, otherwise just the display
+if datetime.date.today().day == billdate:
+  BILLDAY = True
+  CAMERA_CONTROLS = {"ExposureTime": 1000000, "AnalogueGain":2.0}
+  img_start_x = 1000
+  img_end_x = 1570
+  img_start_y = 630
+  img_end_y = 1430
+  img_width = 570
+else:
+  BILLDAY = False
+  CAMERA_CONTROLS = {"ExposureTime": 1000000, "AnalogueGain":4.0}
+  img_start_x = 1200
+  img_end_x = 1400
+  img_start_y = 1000
+  img_end_y = 1070
+  img_width = 200
+
+meter_img = []
+
+capture_interval = 7
+camera=Picamera2()
+camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
+                                                controls=CAMERA_CONTROLS})
+camera.configure(camera_config)
 
 led1 = LED(23)
 led2 = LED(24)
 bus = SMBus(1)
 bme280 = BME280(i2c_dev=bus)
 bme280.setup(mode="forced")
-print(bme280.get_temperature())
-print(bme280.get_humidity())
 
-# Capture image
+# *** Capture images ***
 led1.on()
 led2.on()
-camera=Picamera2()
-camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
-                                                controls={"ExposureTime": 1000000, "AnalogueGain":4.0})
-camera.configure(camera_config)
+
 camera.start() 
 
 sleep(1)
 
-meter_img = []
-
-capture_interval = 7
-
 for i in range(4):
   begin_capture = time_now()
-#  print("Taking picture at: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
   img = camera.capture_array()
-  meter_img.append(img[1000:1070,1200:1400])
+  # Image slice coordinates are [start_y:end_y, start_x:end_x]
+  meter_img.append(img[img_start_y:img_end_y,img_start_x:img_end_x])
   while time_now() < (begin_capture + capture_interval):
     sleep(1)
 
@@ -55,15 +76,10 @@ camera.close()
 led1.off()
 led2.off()
 
-# process image
-# cv.imwrite("/home/pi/picture/image.jpg",img)
-
-# Image slice coordinates are [start_y:end_y, start_x:end_x]
-#meter_a_img = img[828:942,783:983]
-#meter_b_img = img[1170:1230,1460:1660]
+# *** Email images ***
 
 # create datestamps and filename
-date_img=np.zeros((20,200,3),np.uint8)
+date_img=np.zeros((20,img_width,3),np.uint8)
 date_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 email_date_text = datetime.datetime.now().strftime('%A, %d %B %Y at %H:%M')
 img_file_name=datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-meter.jpg"
@@ -80,6 +96,7 @@ all_meter_img = cv.vconcat([meter_img[0],meter_img[1],meter_img[2],meter_img[3],
 #cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
 
 # convert image to bytes
+cv.IMWRITE_JPEG_QUALITY = 70
 ret,jpg=cv.imencode(".jpg",all_meter_img)
 binary_data = jpg.tobytes()
 
