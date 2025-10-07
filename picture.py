@@ -23,9 +23,12 @@ from configparser import ConfigParser
 ini = ConfigParser()
 ini.read("/home/pi/picture.ini")
 
-billdate = ini['default']['billdate']
+billdate = int(ini['default']['billdate'])
+today = datetime.date.today().day
+print(billdate, today) 
 # If billing date, take pictures of whole meter, otherwise just the display
-if datetime.date.today().day == billdate:
+if today == billdate:
+  print("It's billday!")
   BILLDAY = True
   CAMERA_CONTROLS = {"ExposureTime": 1000000, "AnalogueGain":2.0}
   img_start_x = 1000
@@ -34,6 +37,7 @@ if datetime.date.today().day == billdate:
   img_end_y = 1430
   img_width = 570
 else:
+  print("It isn't billday.")
   BILLDAY = False
   CAMERA_CONTROLS = {"ExposureTime": 1000000, "AnalogueGain":4.0}
   img_start_x = 1200
@@ -45,9 +49,10 @@ else:
 meter_img = []
 
 capture_interval = 7
+capture_images = 5
 camera=Picamera2()
 camera_config=camera.create_still_configuration(transform=Transform(hflip=True, vflip=True),
-                                                controls=CAMERA_CONTROLS})
+                                                controls=CAMERA_CONTROLS)
 camera.configure(camera_config)
 
 led1 = LED(23)
@@ -64,7 +69,7 @@ camera.start()
 
 sleep(1)
 
-for i in range(4):
+for i in range(capture_images):
   begin_capture = time_now()
   img = camera.capture_array()
   # Image slice coordinates are [start_y:end_y, start_x:end_x]
@@ -84,6 +89,7 @@ date_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 email_date_text = datetime.datetime.now().strftime('%A, %d %B %Y at %H:%M')
 img_file_name=datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-meter.jpg"
 cv.putText(date_img,date_text,(5,15),cv.FONT_HERSHEY_SIMPLEX,0.5,(255,255,255),1,2)
+meter_img.append(date_img)
 
 # create uptime info
 boot_text = 'Running since ' + boottime().strftime('%H:%M:%S on %A, %d %B %Y')
@@ -92,7 +98,8 @@ boot_text = 'Running since ' + boottime().strftime('%H:%M:%S on %A, %d %B %Y')
 temperature = bme280.get_temperature()
 humidity = bme280.get_humidity()
 weather_text='Temperature: {:.1f}C\nHumidity: {:.1f}%'.format(temperature,humidity)
-all_meter_img = cv.vconcat([meter_img[0],meter_img[1],meter_img[2],meter_img[3],date_img])
+# all_meter_img = cv.vconcat([meter_img[0],meter_img[1],meter_img[2],meter_img[3],date_img])
+all_meter_img = cv.vconcat(meter_img)
 #cv.imwrite("/home/pi/picture/meter.jpg",all_meter_img)
 
 # convert image to bytes
